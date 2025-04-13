@@ -6,13 +6,20 @@
   "scripts": {
     "start": "parcel",
     "build": "parcel build",
+    "serve": "node static.js",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.{js,html,css}\""
   },
-  "keywords": ["arcade", "games", "javascript", "canvas"],
+  "keywords": [
+    "arcade",
+    "games",
+    "javascript",
+    "canvas"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@parcel/transformer-raw": "^2.14.4",
     "@parcel/transformer-sass": "^2.9.3",
     "eslint": "^8.45.0",
     "parcel": "^2.9.3",

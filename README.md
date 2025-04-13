@@ -2,6 +2,10 @@
 
 A browser-based multi-game arcade platform featuring retro-style games with a modern neon aesthetic.
 
+## Disclaimer
+
+This project is intended for non-commercial, educational purposes only. All audio assets used in this project are royalty-free and are used solely for learning and demonstration purposes. This is a learning project to demonstrate web game development techniques and practices.
+
 ## Features
 
 - Multiple retro-style games (Platformer, Racer, Puzzle)

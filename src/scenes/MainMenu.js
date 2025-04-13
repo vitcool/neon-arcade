@@ -1,5 +1,6 @@
 export class MainMenu {
   constructor(canvas, ctx, audioManager, gameState) {
+    // Initialize MainMenu scene
     this.canvas = canvas;
     this.ctx = ctx;
     this.audioManager = audioManager;
@@ -14,44 +15,109 @@ export class MainMenu {
     
     this.showingScores = false;
     this.setupEventListeners();
+    
+    // Load and start background music
+    this.loadBackgroundMusic();
   }
 
+  async loadBackgroundMusic() {
+    try {
+      // Use URL module to get the MP3 path
+      const mp3Url = new URL('../assets/audio/background.mp3', import.meta.url);
+      // Load audio from MP3 URL
+      
+      // Load the audio data
+      const response = await fetch(mp3Url);
+      if (!response.ok) {
+        throw new Error(`Failed to load MP3: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      // MP3 data loaded successfully
+      
+      // Decode the audio data
+      const audioBuffer = await this.audioManager.audioContext.decodeAudioData(
+        arrayBuffer,
+        (decoded) => {
+          // Audio decoded successfully
+        },
+        (error) => {
+          // Failed to decode audio
+        }
+      );
+      
+      this.audioManager.musicBuffer = audioBuffer;
+      // Background music ready to play
+      
+      // Start playing if not muted
+      await this.audioManager.startBackgroundMusic();
+    } catch (error) {
+      // Failed to load background music
+    }
+  }
+
+
+
   setupEventListeners() {
-    this.canvas.addEventListener('click', (e) => this.handleClick(e));
-    this.canvas.addEventListener('touchstart', (e) => {
+    const handleInteraction = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.handleClick(x, y);
+    };
+
+    this.canvas.addEventListener('click', handleInteraction);
+    
+    this.canvas.addEventListener('touchstart', e => {
       e.preventDefault();
-      this.handleClick(e.touches[0]);
+      const touch = e.touches[0];
+      handleInteraction(touch);
     });
   }
 
-  handleClick(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  handleClick(x, y) {
+    // Handle click event
     
-    const scale = this.canvas.width / 1280;
-    const scaledX = x / scale;
-    const scaledY = y / scale;
+    // Scale coordinates to match canvas size
+    const rect = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
+    const scaledX = x * scaleX;
+    const scaledY = y * scaleY;
+    
+    // Convert to scaled canvas coordinates
 
+    // Handle back button in scores view
     if (this.showingScores) {
-      if (scaledY > 600) {
+      if (scaledX > 50 && scaledX < 150 && 
+          scaledY > 50 && scaledY < 90) {
+        console.log('Back button clicked');
         this.showingScores = false;
-        this.audioManager.playSound('click');
+        this.audioManager.playSound();
+        return;
       }
-      return;
     }
 
+    // Check button clicks
     this.buttons.forEach((button, index) => {
       const buttonY = 250 + index * 80;
       if (scaledX > 490 && scaledX < 790 && 
           scaledY > buttonY && scaledY < buttonY + 60) {
-        this.audioManager.playSound('click');
-        if (button.action === 'scores') {
-          this.showingScores = true;
-        } else {
-          // TODO: Start the selected game
-          console.log(`Starting ${button.game}`);
-        }
+        console.log('Button clicked:', button.text);
+        
+        // Play sound first
+        this.audioManager.playSound()
+          .then(() => {
+            console.log('Sound played, handling action for:', button.text);
+            if (button.action === 'scores') {
+              this.showingScores = true;
+            } else {
+              console.log(`Starting game: ${button.game}`);
+            }
+          })
+          .catch(error => {
+            console.error('Error in click handling:', error);
+          });
       }
     });
   }

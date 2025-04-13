@@ -31,9 +31,19 @@ class NeonArcade {
 
   bindEvents() {
     const soundToggle = document.getElementById('soundToggle');
-    soundToggle.addEventListener('click', () => {
-      const isMuted = this.audioManager.toggleMute();
+    
+    // Update initial icon state
+    const updateIcon = (isMuted) => {
       soundToggle.textContent = isMuted ? '🔇' : '🔊';
+      // Update mute/unmute icon
+    };
+    
+    updateIcon(this.audioManager.isMuted);
+    
+    // Add click handler
+    soundToggle.addEventListener('click', async () => {
+      const isMuted = await this.audioManager.toggleMute();
+      updateIcon(isMuted);
     });
   }
 
