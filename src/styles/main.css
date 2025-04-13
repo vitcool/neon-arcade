@@ -1,0 +1,84 @@
+:root {
+  --neon-primary: #ff00ff;
+  --neon-secondary: #00ffff;
+  --neon-background: #0a0a0a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--neon-background);
+  font-family: 'Arial', sans-serif;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#gameCanvas {
+  background: #000;
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: 0 0 20px var(--neon-primary),
+              0 0 40px var(--neon-secondary);
+}
+
+.neon-button {
+  background: transparent;
+  border: 2px solid var(--neon-primary);
+  color: var(--neon-primary);
+  padding: 10px 20px;
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 5px var(--neon-primary);
+  box-shadow: 0 0 10px var(--neon-primary);
+}
+
+.neon-button:hover {
+  background: var(--neon-primary);
+  color: var(--neon-background);
+}
+
+#soundToggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  #controls {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 100;
+  }
+}
