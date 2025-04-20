@@ -7,17 +7,21 @@ export class MainMenu {
     this.gameState = gameState;
     
     this.buttons = [
-      { text: 'Start Platformer', game: 'platformer' },
-      { text: 'Start Racer', game: 'racer' },
-      { text: 'Start Puzzle', game: 'puzzle' },
-      { text: 'Top Scores', action: 'scores' }
+      { text: 'Platformer', game: 'platformer', active: true },
+      { text: 'Racer', game: 'racer', active: false },
+      { text: 'Puzzle', game: 'puzzle', active: false },
+      { text: 'Top Scores', action: 'scores', active: true }
     ];
     
     this.showingScores = false;
+    this.active = true;
     this.setupEventListeners();
     
     // Load and start background music
     this.loadBackgroundMusic();
+    
+    // Start the game loop
+    this.gameLoop();
   }
 
   async loadBackgroundMusic() {
@@ -66,7 +70,15 @@ export class MainMenu {
       this.handleClick(x, y);
     };
 
+    const handleMouseMove = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.handleMouseMove(x, y);
+    };
+
     this.canvas.addEventListener('click', handleInteraction);
+    this.canvas.addEventListener('mousemove', handleMouseMove);
     
     this.canvas.addEventListener('touchstart', e => {
       e.preventDefault();
@@ -80,10 +92,13 @@ export class MainMenu {
     
     // Scale coordinates to match canvas size
     const rect = this.canvas.getBoundingClientRect();
-    const scaleX = this.canvas.width / rect.width;
-    const scaleY = this.canvas.height / rect.height;
+    // We need to scale to our fixed 1280x720 coordinate system
+    const scaleX = 1280 / rect.width;
+    const scaleY = 720 / rect.height;
     const scaledX = x * scaleX;
     const scaledY = y * scaleY;
+    
+    console.log('Click coordinates:', { x, y, scaledX, scaledY });
     
     // Convert to scaled canvas coordinates
 
@@ -102,7 +117,8 @@ export class MainMenu {
     this.buttons.forEach((button, index) => {
       const buttonY = 250 + index * 80;
       if (scaledX > 490 && scaledX < 790 && 
-          scaledY > buttonY && scaledY < buttonY + 60) {
+          scaledY > buttonY && scaledY < buttonY + 60 &&
+          button.active) {
         console.log('Button clicked:', button.text);
         
         // Play sound first
@@ -112,7 +128,27 @@ export class MainMenu {
             if (button.action === 'scores') {
               this.showingScores = true;
             } else {
-              console.log(`Starting game: ${button.game}`);
+              if (button.game === 'platformer') {
+                // Stop the main menu loop
+                this.active = false;
+                
+                import('../games/platformer/Game.js')
+                  .then(module => {
+                    // Create platformer game with callback to return to menu
+                    new module.PlatformerGame(this.canvas, () => {
+                      this.active = true;
+                      this.gameLoop();
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Error loading platformer game:', error);
+                    // Restart main menu loop if game fails to load
+                    this.active = true;
+                    this.gameLoop();
+                  });
+              } else {
+                console.log(`Starting game: ${button.game}`);
+              }
             }
           })
           .catch(error => {
@@ -146,13 +182,36 @@ export class MainMenu {
     }
   }
 
+  handleMouseMove(x, y) {
+    // Scale coordinates to match canvas size
+    const rect = this.canvas.getBoundingClientRect();
+    const scaleX = 1280 / rect.width;
+    const scaleY = 720 / rect.height;
+    const scaledX = x * scaleX;
+    const scaledY = y * scaleY;
+
+    // Check if mouse is over any button
+    let isOverButton = false;
+    this.buttons.forEach((button, index) => {
+      const buttonY = 250 + index * 80;
+      if (scaledX > 490 && scaledX < 790 && 
+          scaledY > buttonY && scaledY < buttonY + 60 &&
+          button.active) {
+        isOverButton = true;
+      }
+    });
+
+    // Update cursor style
+    this.canvas.style.cursor = isOverButton ? 'pointer' : 'default';
+  }
+
   drawButtons() {
     this.buttons.forEach((button, index) => {
       const y = 250 + index * 80;
       
       // Button background
-      this.ctx.fillStyle = '#1a1a1a';
-      this.ctx.strokeStyle = '#ff00ff';
+      this.ctx.fillStyle = button.active ? '#1a1a1a' : '#0a0a0a';
+      this.ctx.strokeStyle = button.active ? '#ff00ff' : '#444444';
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
       this.ctx.roundRect(490, y, 300, 60, 10);
@@ -161,10 +220,23 @@ export class MainMenu {
 
       // Button text
       this.ctx.font = 'bold 24px Arial';
-      this.ctx.fillStyle = '#fff';
+      this.ctx.fillStyle = button.active ? '#fff' : '#666666';
       this.ctx.textAlign = 'center';
       this.ctx.fillText(button.text, 640, y + 38);
+      
+      // Add 'Coming Soon' text for inactive games
+      if (!button.active && button.game) {
+        this.ctx.font = 'italic 16px Arial';
+        this.ctx.fillStyle = '#666666';
+        this.ctx.fillText('Coming Soon', 640, y + 55);
+      }
     });
+  }
+
+  gameLoop() {
+    if (!this.active) return;
+    this.draw();
+    requestAnimationFrame(() => this.gameLoop());
   }
 
   drawScores() {
