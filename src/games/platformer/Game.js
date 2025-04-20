@@ -3,6 +3,7 @@ import { Platform } from './entities/Platform';
 import { Enemy } from './entities/Enemy';
 import { Coin } from './entities/Coin';
 import { Background } from './Background';
+import { drawGameOverScreen } from '../../utils/gameOver.js';
 
 export class PlatformerGame {
     constructor(canvas, onGameEnd) {
@@ -210,17 +211,7 @@ export class PlatformerGame {
         this.ctx.fillText(`Score: ${this.score}`, 20, 30);
 
         if (this.gameOver) {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = '48px Arial';
-            if (this.playerWon) {
-                this.ctx.fillText('You Won!', this.canvas.width/2 - 100, this.canvas.height/2);
-            } else {
-                this.ctx.fillText('Game Over!', this.canvas.width/2 - 100, this.canvas.height/2);
-            }
-            this.ctx.font = '24px Arial';
-            this.ctx.fillText('Press Space to restart or Esc for menu', this.canvas.width/2 - 150, this.canvas.height/2 + 50);
+            drawGameOverScreen(this.ctx, this.canvas, this.score);
         } else if (this.levelTransition) {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);

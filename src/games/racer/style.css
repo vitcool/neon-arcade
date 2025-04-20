@@ -1,0 +1,38 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000; /* Black background for retro feel */
+}
+
+canvas {
+    display: block;
+    margin: 0 auto; /* Center the canvas */
+    background: linear-gradient(to bottom, #333, #000); /* Dark gradient for depth */
+    border: 2px solid #fff; /* White border around the canvas */
+}
+
+h1 {
+    color: #fff; /* White text for the title */
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace; /* Retro font */
+}
+
+.score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: #fff; /* White text for score display */
+    font-size: 24px;
+    font-family: 'Courier New', Courier, monospace; /* Retro font */
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ff0000; /* Red text for game over */
+    font-size: 48px;
+    font-family: 'Courier New', Courier, monospace; /* Retro font */
+    text-align: center;
+}

@@ -16,13 +16,23 @@ class NeonArcade {
 
   setupCanvas() {
     const updateCanvasSize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const ratio = Math.min(width / 1280, height / 720);
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
       
-      this.canvas.width = 1280 * ratio;
-      this.canvas.height = 720 * ratio;
-      this.ctx.scale(ratio, ratio);
+      // Calculate scale to maintain aspect ratio and fill screen
+      const scaleX = window.innerWidth / 1280;
+      const scaleY = window.innerHeight / 720;
+      const scale = Math.max(scaleX, scaleY);
+      
+      // Clear any previous transforms
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      
+      // Center the game area
+      const offsetX = (window.innerWidth - (1280 * scale)) / 2;
+      const offsetY = (window.innerHeight - (720 * scale)) / 2;
+      
+      this.ctx.translate(offsetX, offsetY);
+      this.ctx.scale(scale, scale);
     };
 
     window.addEventListener('resize', updateCanvasSize);

@@ -8,7 +8,7 @@ export class MainMenu {
     
     this.buttons = [
       { text: 'Platformer', game: 'platformer', active: true },
-      { text: 'Racer', game: 'racer', active: false },
+      { text: 'Racer', game: 'racer', active: true },
       { text: 'Puzzle', game: 'puzzle', active: false },
       { text: 'Top Scores', action: 'scores', active: true }
     ];
@@ -146,8 +146,23 @@ export class MainMenu {
                     this.active = true;
                     this.gameLoop();
                   });
+              } else if (button.game === 'racer') {
+                this.active = false;
+                
+                import('../games/racer/Game.js')
+                  .then(module => {
+                    new module.RacerGame(this.canvas, () => {
+                      this.active = true;
+                      this.gameLoop();
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Error loading racer game:', error);
+                    this.active = true;
+                    this.gameLoop();
+                  });
               } else {
-                console.log(`Starting game: ${button.game}`);
+                console.log('Game not implemented yet:', button.game);
               }
             }
           })
@@ -159,6 +174,20 @@ export class MainMenu {
   }
 
   update() {
+    // Reset canvas transform when entering menu
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    
+    // Calculate proper scale for menu
+    const scaleX = this.canvas.width / 1280;
+    const scaleY = this.canvas.height / 720;
+    const scale = Math.max(scaleX, scaleY);
+    
+    const offsetX = (this.canvas.width - (1280 * scale)) / 2;
+    const offsetY = (this.canvas.height - (720 * scale)) / 2;
+    
+    this.ctx.translate(offsetX, offsetY);
+    this.ctx.scale(scale, scale);
+
     // Add any animation updates here
   }
 
