@@ -2,7 +2,7 @@ import { Player } from './entities/Player';
 import { Platform } from './entities/Platform';
 import { Enemy } from './entities/Enemy';
 import { Coin } from './entities/Coin';
-import { Background } from './Background';
+import { Background } from '../../utils/Background.js';
 import { drawGameOverScreen } from '../../utils/gameOver.js';
 
 export class PlatformerGame {
@@ -80,7 +80,15 @@ export class PlatformerGame {
         this.canvas.style.width = `${this.canvas.width * ratio}px`;
         this.canvas.style.height = `${this.canvas.height * ratio}px`;
         
-        this.background = new Background(this.canvas);
+        this.background = new Background(this.canvas, {
+            scrollDirection: 'horizontal',
+            speed: 0,  // Will be controlled by player movement
+            gridSize: 60,
+            lineColor: '#1a1a1a',
+            glowColor: '#00ff00',
+            glowStrength: 10
+        });
+
         this.loadLevel(this.currentLevel);
 
         this.bindControls();
@@ -168,7 +176,7 @@ export class PlatformerGame {
 
         this.player.update(this.platforms);
         this.enemies.forEach(enemy => enemy.update());
-        this.background.update(this.player.velocity.x);
+        this.background.update(-this.player.velocity.x * 0.5); // Scroll based on player movement
 
         // Check coin collisions
         this.coins = this.coins.filter(coin => {

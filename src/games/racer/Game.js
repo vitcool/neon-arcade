@@ -1,5 +1,5 @@
 import { drawGameOverScreen } from '../../utils/gameOver.js';
-import { Background } from '../platformer/Background.js';
+import { Background } from '../../utils/Background.js';
 
 export class RacerGame {
     constructor(canvas, returnToMenu) {
@@ -13,6 +13,7 @@ export class RacerGame {
         this.gameOver = false;
         this.gameOverOpacity = 0;
         this.textScale = 0;
+        this.isRunning = true;  // Initialize isRunning flag
 
         // Set fixed canvas size
         this.canvas.width = 1280;
@@ -52,21 +53,35 @@ export class RacerGame {
         window.addEventListener('resize', this.resizeCanvas);
         
         this.obstacles = [];
-        this.background = new Background(this.canvas); // Add background
+        this.background = new Background(this.canvas, {
+            scrollDirection: 'vertical',
+            speed: this.gameSpeed,
+            gridSize: 80,  // Larger grid for better racing feel
+            lineColor: '#1a1a1a',
+            glowColor: '#0f0',
+            glowStrength: 15
+        });
         this.gameLoop();
     }
 
     handleKeyDown(e) {
+        // Always handle ESC key first, regardless of game state
+        if (e.key === 'Escape') {
+            this.isRunning = false;  // Stop the game loop
+            this.cleanup();
+            this.returnToMenu();
+            return;
+        }
+
+        // Handle game restart (space key or F1)
+        if (this.gameOver && (e.key === ' ' || e.code === 'Space' || e.key === 'F1')) {
+            this.restartGame();
+            return;
+        }
+
+        // Handle movement keys
         if (this.keys.hasOwnProperty(e.key)) {
             this.keys[e.key] = true;
-        }
-        if (this.gameOver) {
-            if (e.key === 'F1') {
-                this.restartGame();
-            } else if (e.key === 'Escape') {
-                this.cleanup();
-                this.returnToMenu();
-            }
         }
     }
 
@@ -90,9 +105,11 @@ export class RacerGame {
 
     endGame() {
         this.gameOver = true;
+        // Don't immediately return to menu, show game over screen first
     }
 
     cleanup() {
+        this.isRunning = false;
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('keyup', this.handleKeyUp);
         window.removeEventListener('resize', this.resizeCanvas);
@@ -110,6 +127,7 @@ export class RacerGame {
         this.obstacles.forEach(obstacle => {
             obstacle.speed = this.gameSpeed;
         });
+        this.isRunning = true;
         this.gameLoop();
     }
 
@@ -123,6 +141,11 @@ export class RacerGame {
     }
 
     gameLoop() {
+        // Check isRunning first before doing anything
+        if (!this.isRunning) {
+            return;  // Exit immediately if game should stop
+        }
+        
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -134,8 +157,8 @@ export class RacerGame {
             return;
         }
 
-        // Update and draw background
-        this.background.update(-2); // Constant scroll speed
+        // Update background with positive speed for downward movement
+        this.background.update(Math.abs(this.gameSpeed));
         this.background.draw(this.ctx);
 
         // Remove this since background handles it
@@ -212,6 +235,9 @@ export class RacerGame {
         this.ctx.textAlign = 'left';
         this.ctx.fillText(`Score: ${this.score}`, 20, 45);
 
-        requestAnimationFrame(() => this.gameLoop());
+        // Only continue loop if game is still running
+        if (this.isRunning) {
+            requestAnimationFrame(() => this.gameLoop());
+        }
     }
 }
