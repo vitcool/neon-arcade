@@ -9,8 +9,8 @@ export class MainMenu {
     this.buttons = [
       { text: 'Platformer', game: 'platformer', active: true },
       { text: 'Racer', game: 'racer', active: true },
-      { text: 'Puzzle', game: 'puzzle', active: false },
-      { text: 'Top Scores', action: 'scores', active: true }
+      { text: 'Snake', game: 'snake', active: true },
+      // { text: 'Top Scores', action: 'scores', active: false }
     ];
     
     this.showingScores = false;
@@ -158,6 +158,21 @@ export class MainMenu {
                   })
                   .catch(error => {
                     console.error('Error loading racer game:', error);
+                    this.active = true;
+                    this.gameLoop();
+                  });
+              } else if (button.game === 'snake') {
+                this.active = false;
+                
+                import('../games/snake/Game.js')
+                  .then(module => {
+                    new module.SnakeGame(this.canvas, () => {
+                      this.active = true;
+                      this.gameLoop();
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Error loading snake game:', error);
                     this.active = true;
                     this.gameLoop();
                   });

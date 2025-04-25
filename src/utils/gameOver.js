@@ -9,6 +9,10 @@ export function drawGameOverScreen(ctx, canvas, score, gameOverOpacity = 0.8, te
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Set up text properties
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
     // Draw glowing "Game Over" text with stronger glow
     ctx.save();
     ctx.translate(canvas.width/2, canvas.height/2 - 50);
@@ -21,13 +25,17 @@ export function drawGameOverScreen(ctx, canvas, score, gameOverOpacity = 0.8, te
     ctx.strokeStyle = '#ff00ff';
     ctx.lineWidth = 4;
     ctx.font = '64px Arial';
-    ctx.textAlign = 'center';
     ctx.strokeText('Game Over!', 0, 0);
     ctx.fillText('Game Over!', 0, 0);
     ctx.restore();
 
+    // Reset text properties for score and instructions
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
     // Enhance score display
     ctx.shadowBlur = 15;
+    ctx.fillStyle = '#fff';
     ctx.font = '48px Arial';
     ctx.fillText(`Final Score: ${score}`, canvas.width/2, canvas.height/2 + 40);
     
