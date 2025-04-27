@@ -11,11 +11,13 @@ export class TouchControls {
         
         this.buttons = {};
         this.touchState = {};
+        this.controlsContainer = null;  // Add this line
         this.createControls();
     }
 
     createControls() {
         const controlsContainer = document.createElement('div');
+        this.controlsContainer = controlsContainer;  // Store reference
         controlsContainer.className = 'touch-controls mobile-only';
         controlsContainer.style.cssText = `
             position: absolute;
@@ -131,6 +133,18 @@ export class TouchControls {
 
     isPressed(buttonId) {
         return this.touchState[buttonId] || false;
+    }
+
+    showControls() {
+        if (this.controlsContainer) {
+            this.controlsContainer.style.display = 'flex';
+        }
+    }
+
+    hideControls() {
+        if (this.controlsContainer) {
+            this.controlsContainer.style.display = 'none';
+        }
     }
 
     destroy() {

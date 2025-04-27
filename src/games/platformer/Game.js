@@ -19,6 +19,9 @@ export class PlatformerGame {
         this.transitionTimer = 0;
         this.levels = this.defineLevels();
         this.init();
+        
+        // Add touch event listener for game over buttons
+        this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
     }
 
     defineLevels() {
@@ -195,6 +198,12 @@ export class PlatformerGame {
         this.levelTransition = false;
         this.transitionTimer = 0;
         this.loadLevel(this.currentLevel);
+        
+        // Reinitialize touch controls
+        if (this.touchControls) {
+            this.touchControls.destroy();
+        }
+        this.initTouchControls();
     }
 
     returnToMainMenu() {
@@ -231,9 +240,17 @@ export class PlatformerGame {
     }
 
     update() {
-        if (this.gameOver) return;
+        if (this.gameOver) {
+            if (this.touchControls) {
+                this.touchControls.hideControls();
+            }
+            return;
+        }
 
         if (this.levelTransition) {
+            if (this.touchControls) {
+                this.touchControls.hideControls();
+            }
             this.transitionTimer++;
             if (this.transitionTimer > 60) { // 1 second at 60 FPS
                 this.levelTransition = false;
@@ -245,6 +262,10 @@ export class PlatformerGame {
                 }
             }
             return;
+        }
+
+        if (this.touchControls) {
+            this.touchControls.showControls();
         }
 
         this.player.update(this.platforms);
@@ -293,13 +314,6 @@ export class PlatformerGame {
 
         if (this.gameOver) {
             drawGameOverScreen(this.ctx, this.canvas, this.score);
-            // Add touch instructions
-            this.ctx.font = '24px Arial';
-            this.ctx.fillStyle = '#0f0';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('Tap left side to restart', this.canvas.width * 0.25, this.canvas.height * 0.7);
-            this.ctx.fillStyle = '#ff0';
-            this.ctx.fillText('Tap right side for menu', this.canvas.width * 0.75, this.canvas.height * 0.7);
         } else if (this.levelTransition) {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -317,11 +331,43 @@ export class PlatformerGame {
         requestAnimationFrame(() => this.gameLoop());
     }
 
+    handleTouch(e) {
+        if (!this.gameOver) return;
+        
+        const touch = e.touches[0];
+        const rect = this.canvas.getBoundingClientRect();
+        const scale = rect.width / this.canvas.width;
+        
+        const x = (touch.clientX - rect.left) / scale;
+        const y = (touch.clientY - rect.top) / scale;
+        
+        // Button dimensions from gameOver.js
+        const buttonY = this.canvas.height * 0.7;
+        const buttonHeight = 80;
+        const buttonWidth = 300;
+        const buttonSpacing = 40;
+        
+        // Check if touch is within button area
+        if (y >= buttonY && y <= buttonY + buttonHeight) {
+            // Restart button (left)
+            if (x >= this.canvas.width/2 - buttonWidth - buttonSpacing/2 && 
+                x <= this.canvas.width/2 - buttonSpacing/2) {
+                this.restart();
+            }
+            // Main menu button (right)
+            else if (x >= this.canvas.width/2 + buttonSpacing/2 && 
+                     x <= this.canvas.width/2 + buttonWidth + buttonSpacing/2) {
+                this.returnToMainMenu();
+            }
+        }
+    }
+
     cleanup() {
         this.isRunning = false;
         if (this.touchControls) {
             this.touchControls.destroy();
         }
         window.removeEventListener('resize', () => this.resizeCanvas());
+        this.canvas.removeEventListener('touchstart', this.handleTouch.bind(this));
     }
 }

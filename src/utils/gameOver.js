@@ -9,41 +9,81 @@ export function drawGameOverScreen(ctx, canvas, score, gameOverOpacity = 0.8, te
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Set up text properties
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Draw glowing "Game Over" text with stronger glow
+    // Draw game over text with glow
     ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2 - 50);
+    ctx.translate(canvas.width/2, canvas.height/3);
     ctx.scale(textScale, textScale);
     
-    // Add stronger glow effect
     ctx.shadowColor = '#ff00ff';
     ctx.shadowBlur = 20;
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#ff00ff';
     ctx.lineWidth = 4;
     ctx.font = '64px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.strokeText('Game Over!', 0, 0);
     ctx.fillText('Game Over!', 0, 0);
     ctx.restore();
 
-    // Reset text properties for score and instructions
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    // Enhance score display
+    // Draw score with glow
+    ctx.save();
     ctx.shadowBlur = 15;
     ctx.fillStyle = '#fff';
     ctx.font = '48px Arial';
-    ctx.fillText(`Final Score: ${score}`, canvas.width/2, canvas.height/2 + 40);
-    
-    // Make instruction text larger and more visible
-    ctx.shadowBlur = 10;
-    ctx.font = '32px Arial';
-    ctx.fillStyle = '#0f0';
-    ctx.fillText('Press SPACE to restart', canvas.width/2, canvas.height/2 + 100);
-    ctx.fillStyle = '#ff0';
-    ctx.fillText('Press ESC to return to menu', canvas.width/2, canvas.height/2 + 150);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`Final Score: ${score}`, canvas.width/2, canvas.height/2);
+    ctx.restore();
+
+    // Draw buttons
+    const buttonWidth = 300;
+    const buttonHeight = 80;
+    const buttonSpacing = 40;
+    const buttonsY = canvas.height * 0.7;
+
+    // Helper function to draw a button
+    const drawButton = (x, y, width, height, text, isHovered = false) => {
+        ctx.save();
+        // Button glow
+        ctx.shadowColor = isHovered ? '#00ff00' : '#003300';
+        ctx.shadowBlur = 20;
+        
+        // Button background
+        ctx.fillStyle = isHovered ? '#003300' : '#001100';
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 3;
+        
+        // Draw rounded rectangle
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, 10);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Button text
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x + width/2, y + height/2);
+        ctx.restore();
+    };
+
+    // Draw Restart button
+    drawButton(
+        canvas.width/2 - buttonWidth - buttonSpacing/2,
+        buttonsY,
+        buttonWidth,
+        buttonHeight,
+        'Restart Game'
+    );
+
+    // Draw Main Menu button
+    drawButton(
+        canvas.width/2 + buttonSpacing/2,
+        buttonsY,
+        buttonWidth,
+        buttonHeight,
+        'Back to Main Menu'
+    );
 }

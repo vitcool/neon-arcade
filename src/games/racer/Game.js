@@ -62,6 +62,9 @@ export class RacerGame {
             glowStrength: 15
         });
         this.gameLoop();
+
+        // Add touch event listener for game over buttons
+        this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
     }
 
     handleKeyDown(e) {
@@ -91,6 +94,38 @@ export class RacerGame {
         }
     }
 
+    handleTouch(e) {
+        if (!this.gameOver) return;
+        
+        const touch = e.touches[0];
+        const rect = this.canvas.getBoundingClientRect();
+        const scale = rect.width / this.canvas.width;
+        
+        const x = (touch.clientX - rect.left) / scale;
+        const y = (touch.clientY - rect.top) / scale;
+        
+        // Button dimensions from gameOver.js
+        const buttonY = this.canvas.height * 0.7;
+        const buttonHeight = 80;
+        const buttonWidth = 300;
+        const buttonSpacing = 40;
+        
+        // Check if touch is within button area
+        if (y >= buttonY && y <= buttonY + buttonHeight) {
+            // Restart button (left)
+            if (x >= this.canvas.width/2 - buttonWidth - buttonSpacing/2 && 
+                x <= this.canvas.width/2 - buttonSpacing/2) {
+                this.restartGame();
+            }
+            // Main menu button (right)
+            else if (x >= this.canvas.width/2 + buttonSpacing/2 && 
+                     x <= this.canvas.width/2 + buttonWidth + buttonSpacing/2) {
+                this.cleanup();
+                this.returnToMenu();
+            }
+        }
+    }
+
     createObstacle() {
         const width = Math.random() * 100 + 60; // Random width between 60 and 160
         const height = Math.random() * 100 + 80; // Random height between 80 and 180
@@ -113,6 +148,7 @@ export class RacerGame {
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('keyup', this.handleKeyUp);
         window.removeEventListener('resize', this.resizeCanvas);
+        this.canvas.removeEventListener('touchstart', this.handleTouch.bind(this));
     }
 
     restartGame() {
