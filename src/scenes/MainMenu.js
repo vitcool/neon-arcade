@@ -14,6 +14,11 @@ export class MainMenu {
     
     this.showingScores = false;
     this.active = true;
+    
+    // Set initial canvas dimensions
+    this.canvas.width = 1280;
+    this.canvas.height = 720;
+    
     this.setupEventListeners();
     this.resizeCanvas();
     
@@ -22,6 +27,9 @@ export class MainMenu {
     
     // Handle window resizing
     window.addEventListener('resize', () => this.resizeCanvas());
+    
+    // Start the game loop immediately
+    this.gameLoop();
   }
 
   async loadBackgroundMusic() {
@@ -196,14 +204,18 @@ export class MainMenu {
     this.ctx.fillStyle = '#000';
     this.ctx.fillRect(0, 0, 1280, 720);
 
-    // Draw title
-    this.ctx.font = 'bold 72px Arial';
+    // Draw title with adjusted size for mobile
+    const isMobile = window.innerWidth <= 768;
+    this.ctx.font = isMobile ? 'bold 56px Arial' : 'bold 72px Arial';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#ff00ff';
     this.ctx.strokeStyle = '#00ffff';
     this.ctx.lineWidth = 2;
-    this.ctx.fillText('NEON ARCADE', 640, 150);
-    this.ctx.strokeText('NEON ARCADE', 640, 150);
+    
+    // Adjust title position for mobile
+    const titleY = isMobile ? 180 : 150;
+    this.ctx.fillText('NEON ARCADE', 640, titleY);
+    this.ctx.strokeText('NEON ARCADE', 640, titleY);
 
     if (this.showingScores) {
       this.drawScores();
@@ -236,12 +248,15 @@ export class MainMenu {
   }
 
   drawButtons() {
+    // Determine if we're on mobile based on screen width
+    const isMobile = window.innerWidth <= 768;
+    
     this.buttons.forEach((button, index) => {
-      const y = 250 + index * 80;
-      
-      // Make buttons larger on mobile
-      const buttonWidth = window.innerWidth <= 768 ? 400 : 300;
-      const buttonHeight = window.innerWidth <= 768 ? 80 : 60;
+      // Adjust button dimensions for mobile
+      const buttonWidth = isMobile ? 280 : 300;
+      const buttonSpacing = isMobile ? 60 : 80;
+      const y = isMobile ? 280 + index * buttonSpacing : 250 + index * buttonSpacing;
+      const buttonHeight = 60;
       const buttonX = (1280 - buttonWidth) / 2;
       
       // Button background
@@ -253,13 +268,12 @@ export class MainMenu {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Button text
-      this.ctx.font = window.innerWidth <= 768 ? 'bold 32px Arial' : 'bold 24px Arial';
+      // Button text - adjust font size for mobile
+      this.ctx.font = isMobile ? '24px Arial' : 'bold 24px Arial';
       this.ctx.fillStyle = button.active ? '#fff' : '#666666';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(button.text, 640, y + buttonHeight/2 + 10);
+      this.ctx.fillText(button.text, 640, y + buttonHeight/2 + 8);
       
-      // Add 'Coming Soon' text for inactive games
       if (!button.active && button.game) {
         this.ctx.font = 'italic 16px Arial';
         this.ctx.fillStyle = '#666666';

@@ -6,37 +6,48 @@ class NeonArcade {
   constructor() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
+    
+    // Set initial canvas dimensions
+    this.canvas.width = 1280;
+    this.canvas.height = 720;
+    
+    // Setup canvas and styles first
+    this.setupCanvas();
+    
+    // Initialize managers after canvas setup
     this.audioManager = new AudioManager();
     this.gameState = new GameState();
     
-    this.setupCanvas();
+    // Bind events after managers are ready
     this.bindEvents();
+    
+    // Initialize main menu last, when everything is ready
     this.initMainMenu();
   }
 
   setupCanvas() {
     const updateCanvasSize = () => {
-      this.canvas.width = window.innerWidth;
-      this.canvas.height = window.innerHeight;
-      
       // Calculate scale to maintain aspect ratio and fill screen
       const scaleX = window.innerWidth / 1280;
       const scaleY = window.innerHeight / 720;
-      const scale = Math.max(scaleX, scaleY);
+      const scale = Math.min(scaleX, scaleY);
       
-      // Clear any previous transforms
-      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      // Set canvas display size while maintaining internal dimensions
+      this.canvas.style.width = `${1280 * scale}px`;
+      this.canvas.style.height = `${720 * scale}px`;
       
-      // Center the game area
-      const offsetX = (window.innerWidth - (1280 * scale)) / 2;
-      const offsetY = (window.innerHeight - (720 * scale)) / 2;
-      
-      this.ctx.translate(offsetX, offsetY);
-      this.ctx.scale(scale, scale);
+      // Center the canvas
+      this.canvas.style.position = 'absolute';
+      this.canvas.style.left = '50%';
+      this.canvas.style.top = '50%';
+      this.canvas.style.transform = 'translate(-50%, -50%)';
     };
 
-    window.addEventListener('resize', updateCanvasSize);
+    // Apply initial size
     updateCanvasSize();
+    
+    // Handle resize events
+    window.addEventListener('resize', updateCanvasSize);
   }
 
   bindEvents() {
