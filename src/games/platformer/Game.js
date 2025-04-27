@@ -4,6 +4,7 @@ import { Enemy } from './entities/Enemy';
 import { Coin } from './entities/Coin';
 import { Background } from '../../utils/Background.js';
 import { drawGameOverScreen } from '../../utils/gameOver.js';
+import { TouchControls } from '../../utils/TouchControls.js';
 
 export class PlatformerGame {
     constructor(canvas, onGameEnd) {
@@ -72,13 +73,8 @@ export class PlatformerGame {
         this.canvas.height = 720;
         
         // Scale the game to maintain aspect ratio
-        const ratio = Math.min(
-            window.innerWidth / this.canvas.width,
-            window.innerHeight / this.canvas.height
-        );
-        
-        this.canvas.style.width = `${this.canvas.width * ratio}px`;
-        this.canvas.style.height = `${this.canvas.height * ratio}px`;
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
         
         this.background = new Background(this.canvas, {
             scrollDirection: 'horizontal',
@@ -89,13 +85,90 @@ export class PlatformerGame {
             glowStrength: 10
         });
 
+        // Initialize touch controls
+        this.initTouchControls();
+
         this.loadLevel(this.currentLevel);
 
         this.bindControls();
         this.gameLoop();
     }
 
+    resizeCanvas() {
+        const ratio = Math.min(
+            window.innerWidth / this.canvas.width,
+            window.innerHeight / this.canvas.height
+        );
+        
+        this.canvas.style.width = `${this.canvas.width * ratio}px`;
+        this.canvas.style.height = `${this.canvas.height * ratio}px`;
+
+        // Center the canvas
+        this.canvas.style.position = 'absolute';
+        this.canvas.style.left = '50%';
+        this.canvas.style.top = '50%';
+        this.canvas.style.transform = 'translate(-50%, -50%)';
+    }
+
+    initTouchControls() {
+        const container = this.canvas.parentElement;
+        
+        this.touchControls = new TouchControls(container, {
+            buttonSize: 70,
+            buttonColor: '#00ff00',
+            buttonOpacity: 0.6,
+            onButtonPress: (buttonId) => {
+                switch (buttonId) {
+                    case 'left':
+                        this.player.velocity.x = -this.player.speed;
+                        this.player.direction = -1;
+                        break;
+                    case 'right':
+                        this.player.velocity.x = this.player.speed;
+                        this.player.direction = 1;
+                        break;
+                    case 'jump':
+                        if (!this.player.isJumping) {
+                            this.player.velocity.y = this.player.jumpForce;
+                            this.player.isJumping = true;
+                        }
+                        break;
+                }
+            },
+            onButtonRelease: (buttonId) => {
+                switch (buttonId) {
+                    case 'left':
+                        if (this.player.velocity.x < 0) this.player.velocity.x = 0;
+                        break;
+                    case 'right':
+                        if (this.player.velocity.x > 0) this.player.velocity.x = 0;
+                        break;
+                }
+            }
+        });
+    }
+
     bindControls() {
+        // Add touch event for game over screen
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (this.gameOver) {
+                const touch = e.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                // Check if touch is in the restart or menu area
+                if (y > this.canvas.height * 0.6) {
+                    if (x < this.canvas.width * 0.5) {
+                        this.restart();
+                    } else {
+                        this.returnToMainMenu();
+                    }
+                }
+            }
+        });
+
+        // Keep existing keyboard controls
         window.addEventListener('keydown', (e) => {
             if (this.gameOver) {
                 if (e.code === 'Space' || e.code === 'Enter') {
@@ -220,12 +293,20 @@ export class PlatformerGame {
 
         if (this.gameOver) {
             drawGameOverScreen(this.ctx, this.canvas, this.score);
+            // Add touch instructions
+            this.ctx.font = '24px Arial';
+            this.ctx.fillStyle = '#0f0';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Tap left side to restart', this.canvas.width * 0.25, this.canvas.height * 0.7);
+            this.ctx.fillStyle = '#ff0';
+            this.ctx.fillText('Tap right side for menu', this.canvas.width * 0.75, this.canvas.height * 0.7);
         } else if (this.levelTransition) {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.fillStyle = '#00ff00';
             this.ctx.font = '48px Arial';
-            this.ctx.fillText(`Level ${this.currentLevel}`, this.canvas.width/2 - 80, this.canvas.height/2);
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`Level ${this.currentLevel}`, this.canvas.width/2, this.canvas.height/2);
         }
     }
 
@@ -234,5 +315,13 @@ export class PlatformerGame {
         this.update();
         this.render();
         requestAnimationFrame(() => this.gameLoop());
+    }
+
+    cleanup() {
+        this.isRunning = false;
+        if (this.touchControls) {
+            this.touchControls.destroy();
+        }
+        window.removeEventListener('resize', () => this.resizeCanvas());
     }
 }

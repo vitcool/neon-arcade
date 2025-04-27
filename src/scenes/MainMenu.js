@@ -9,64 +9,70 @@ export class MainMenu {
     this.buttons = [
       { text: 'Platformer', game: 'platformer', active: true },
       { text: 'Racer', game: 'racer', active: true },
-      { text: 'Snake', game: 'snake', active: true },
-      // { text: 'Top Scores', action: 'scores', active: false }
+      { text: 'Snake', game: 'snake', active: true }
     ];
     
     this.showingScores = false;
     this.active = true;
     this.setupEventListeners();
+    this.resizeCanvas();
     
     // Load and start background music
     this.loadBackgroundMusic();
     
-    // Start the game loop
-    this.gameLoop();
+    // Handle window resizing
+    window.addEventListener('resize', () => this.resizeCanvas());
   }
 
   async loadBackgroundMusic() {
     try {
-      // Use URL module to get the MP3 path
       const mp3Url = new URL('../assets/audio/background.mp3', import.meta.url);
-      // Load audio from MP3 URL
-      
-      // Load the audio data
       const response = await fetch(mp3Url);
       if (!response.ok) {
         throw new Error(`Failed to load MP3: ${response.status} ${response.statusText}`);
       }
       
       const arrayBuffer = await response.arrayBuffer();
-      // MP3 data loaded successfully
-      
-      // Decode the audio data
-      const audioBuffer = await this.audioManager.audioContext.decodeAudioData(
-        arrayBuffer,
-        (decoded) => {
-          // Audio decoded successfully
-        },
-        (error) => {
-          // Failed to decode audio
-        }
-      );
+      const audioBuffer = await this.audioManager.audioContext.decodeAudioData(arrayBuffer);
       
       this.audioManager.musicBuffer = audioBuffer;
-      // Background music ready to play
-      
-      // Start playing if not muted
       await this.audioManager.startBackgroundMusic();
-    } catch (error) {
-      // Failed to load background music
+    } catch {
+      // Failed to load background music - silent fail
     }
   }
 
+  resizeCanvas() {
+    const ratio = Math.min(
+      window.innerWidth / 1280,
+      window.innerHeight / 720
+    );
+    
+    this.canvas.style.width = `${1280 * ratio}px`;
+    this.canvas.style.height = `${720 * ratio}px`;
 
+    // Center the canvas
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.left = '50%';
+    this.canvas.style.top = '50%';
+    this.canvas.style.transform = 'translate(-50%, -50%)';
+  }
 
   setupEventListeners() {
     const handleInteraction = (e) => {
+      e.preventDefault();
       const rect = this.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      let x, y;
+      
+      if (e.type.startsWith('touch')) {
+        const touch = e.touches[0] || e.changedTouches[0];
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+      } else {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+      }
+      
       this.handleClick(x, y);
     };
 
@@ -77,72 +83,56 @@ export class MainMenu {
       this.handleMouseMove(x, y);
     };
 
+    // Mouse events
     this.canvas.addEventListener('click', handleInteraction);
     this.canvas.addEventListener('mousemove', handleMouseMove);
     
-    this.canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      handleInteraction(touch);
-    });
+    // Touch events
+    this.canvas.addEventListener('touchstart', handleInteraction, { passive: false });
+    
+    // Prevent default touch behaviors
+    this.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    this.canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
   }
 
   handleClick(x, y) {
-    // Handle click event
-    
-    // Scale coordinates to match canvas size
     const rect = this.canvas.getBoundingClientRect();
-    // We need to scale to our fixed 1280x720 coordinate system
     const scaleX = 1280 / rect.width;
     const scaleY = 720 / rect.height;
     const scaledX = x * scaleX;
     const scaledY = y * scaleY;
-    
-    console.log('Click coordinates:', { x, y, scaledX, scaledY });
-    
-    // Convert to scaled canvas coordinates
 
-    // Handle back button in scores view
     if (this.showingScores) {
       if (scaledX > 50 && scaledX < 150 && 
           scaledY > 50 && scaledY < 90) {
-        console.log('Back button clicked');
         this.showingScores = false;
         this.audioManager.playSound();
         return;
       }
     }
 
-    // Check button clicks
     this.buttons.forEach((button, index) => {
       const buttonY = 250 + index * 80;
       if (scaledX > 490 && scaledX < 790 && 
           scaledY > buttonY && scaledY < buttonY + 60 &&
           button.active) {
-        console.log('Button clicked:', button.text);
         
-        // Play sound first
         this.audioManager.playSound()
           .then(() => {
-            console.log('Sound played, handling action for:', button.text);
             if (button.action === 'scores') {
               this.showingScores = true;
             } else {
               if (button.game === 'platformer') {
-                // Stop the main menu loop
                 this.active = false;
                 
                 import('../games/platformer/Game.js')
                   .then(module => {
-                    // Create platformer game with callback to return to menu
                     new module.PlatformerGame(this.canvas, () => {
                       this.active = true;
                       this.gameLoop();
                     });
                   })
-                  .catch(error => {
-                    console.error('Error loading platformer game:', error);
-                    // Restart main menu loop if game fails to load
+                  .catch(() => {
                     this.active = true;
                     this.gameLoop();
                   });
@@ -156,8 +146,7 @@ export class MainMenu {
                       this.gameLoop();
                     });
                   })
-                  .catch(error => {
-                    console.error('Error loading racer game:', error);
+                  .catch(() => {
                     this.active = true;
                     this.gameLoop();
                   });
@@ -171,18 +160,15 @@ export class MainMenu {
                       this.gameLoop();
                     });
                   })
-                  .catch(error => {
-                    console.error('Error loading snake game:', error);
+                  .catch(() => {
                     this.active = true;
                     this.gameLoop();
                   });
-              } else {
-                console.log('Game not implemented yet:', button.game);
               }
             }
           })
-          .catch(error => {
-            console.error('Error in click handling:', error);
+          .catch(() => {
+            // Silent fail on audio/click handling errors
           });
       }
     });
@@ -253,26 +239,31 @@ export class MainMenu {
     this.buttons.forEach((button, index) => {
       const y = 250 + index * 80;
       
+      // Make buttons larger on mobile
+      const buttonWidth = window.innerWidth <= 768 ? 400 : 300;
+      const buttonHeight = window.innerWidth <= 768 ? 80 : 60;
+      const buttonX = (1280 - buttonWidth) / 2;
+      
       // Button background
       this.ctx.fillStyle = button.active ? '#1a1a1a' : '#0a0a0a';
       this.ctx.strokeStyle = button.active ? '#ff00ff' : '#444444';
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
-      this.ctx.roundRect(490, y, 300, 60, 10);
+      this.ctx.roundRect(buttonX, y, buttonWidth, buttonHeight, 10);
       this.ctx.fill();
       this.ctx.stroke();
 
       // Button text
-      this.ctx.font = 'bold 24px Arial';
+      this.ctx.font = window.innerWidth <= 768 ? 'bold 32px Arial' : 'bold 24px Arial';
       this.ctx.fillStyle = button.active ? '#fff' : '#666666';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(button.text, 640, y + 38);
+      this.ctx.fillText(button.text, 640, y + buttonHeight/2 + 10);
       
       // Add 'Coming Soon' text for inactive games
       if (!button.active && button.game) {
         this.ctx.font = 'italic 16px Arial';
         this.ctx.fillStyle = '#666666';
-        this.ctx.fillText('Coming Soon', 640, y + 55);
+        this.ctx.fillText('Coming Soon', 640, y + buttonHeight - 15);
       }
     });
   }
@@ -317,5 +308,9 @@ export class MainMenu {
     this.ctx.fillStyle = '#fff';
     this.ctx.font = 'bold 24px Arial';
     this.ctx.fillText('Back', 640, 635);
+  }
+
+  cleanup() {
+    window.removeEventListener('resize', () => this.resizeCanvas());
   }
 }
