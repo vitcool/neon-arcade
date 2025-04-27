@@ -59,6 +59,9 @@ export class SnakeGame {
         // Add touch event listener for game over buttons
         this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
 
+        // Add mouse event listener for game over buttons
+        this.canvas.addEventListener('mousedown', this.handleMouse.bind(this));
+
         // Start game loop
         this.gameLoop();
     }
@@ -111,6 +114,37 @@ export class SnakeGame {
         const buttonSpacing = 40;
         
         // Check if touch is within button area
+        if (y >= buttonY && y <= buttonY + buttonHeight) {
+            // Restart button (left)
+            if (x >= this.canvas.width/2 - buttonWidth - buttonSpacing/2 && 
+                x <= this.canvas.width/2 - buttonSpacing/2) {
+                this.restartGame();
+            }
+            // Main menu button (right)
+            else if (x >= this.canvas.width/2 + buttonSpacing/2 && 
+                     x <= this.canvas.width/2 + buttonWidth + buttonSpacing/2) {
+                this.cleanup();
+                this.returnToMenu();
+            }
+        }
+    }
+
+    handleMouse(e) {
+        if (!this.gameOver) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const scale = rect.width / this.canvas.width;
+
+        const x = (e.clientX - rect.left) / scale;
+        const y = (e.clientY - rect.top) / scale;
+
+        // Button dimensions from gameOver.js
+        const buttonY = this.canvas.height * 0.7;
+        const buttonHeight = 80;
+        const buttonWidth = 300;
+        const buttonSpacing = 40;
+
+        // Check if mouse is within button area
         if (y >= buttonY && y <= buttonY + buttonHeight) {
             // Restart button (left)
             if (x >= this.canvas.width/2 - buttonWidth - buttonSpacing/2 && 
@@ -308,6 +342,7 @@ export class SnakeGame {
         document.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('resize', this.resizeCanvas);
         this.canvas.removeEventListener('touchstart', this.handleTouch.bind(this));
+        this.canvas.removeEventListener('mousedown', this.handleMouse.bind(this));
     }
 
     gameLoop(timestamp) {
